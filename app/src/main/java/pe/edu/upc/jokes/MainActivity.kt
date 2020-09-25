@@ -3,6 +3,9 @@ package pe.edu.upc.jokes
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.ActionBar
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -11,54 +14,41 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var toolbar: ActionBar
+    private lateinit var jokeFragment: JokeFragment
+    private lateinit var listFragment: ListFragment
 
-    companion object {
-        const val TAG = "MainActivity"
+    private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        when (item.itemId) {
+            R.id.navigation_joke -> {
+                toolbar.title = "Jokes"
+                openFragment(jokeFragment)
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.navigation_list -> {
+                toolbar.title = "List"
+                openFragment(listFragment)
+                return@OnNavigationItemSelectedListener true
+            }
+        }
+        false
+    }
+
+    private fun openFragment(fragment: Fragment) {
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.container, fragment)
+        transaction.addToBackStack(null)
+        transaction.commit()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        jokeFragment = JokeFragment.newInstance()
+        listFragment = ListFragment.newInstance()
+        toolbar = supportActionBar!!
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.navigationView)
 
-        initViews()
-
-    }
-
-    private fun initViews() {
-        btJoke.setOnClickListener {
-            getJoke()
-        }
-    }
-
-    private fun getJoke() {
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://geek-jokes.sameerkumar.website/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val jokeApi = retrofit.create(JokeApi::class.java)
-
-        val request = jokeApi.getJoke("json")
-
-        request.enqueue(object : Callback<Joke> {
-            override fun onResponse(call: Call<Joke>, response: Response<Joke>) {
-
-                if (response.isSuccessful) {
-                    val joke = response.body()
-                    tvJoke.text = joke!!.sentence
-
-                    AppDatabase.getInstance(this@MainActivity).getDao().insert(joke)
-
-                }
-            }
-
-            override fun onFailure(call: Call<Joke>, t: Throwable) {
-                Log.d(TAG, t.toString())
-            }
-
-        }
-        )
-
+        bottomNavigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
 }

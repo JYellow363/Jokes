@@ -8,7 +8,7 @@ import androidx.room.Query
 @Dao
 interface JokeDao {
 
-    @Query("select * from joke")
+    @Query("select * from Joke")
     fun getAll() : List<Joke>
 
     @Insert
